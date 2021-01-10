@@ -1,9 +1,10 @@
 const Responses = require('../common/API_Responses');
 const Dynamo = require('../common/Dynamo');
+const WebSocket = require('../common/websocketMessage');
 
 const tableName = process.env.tableName;
 
-exports.handler = async event => {
+exports.handler = async (event, context, callback) => {
     console.log('event', event);
 
     const { connectionId: connectionID, domainName, stage } = event.requestContext;
@@ -17,6 +18,15 @@ exports.handler = async event => {
     };
 
     await Dynamo.write(data, tableName);
+    // Cannot send the ID to the client, 
+    // await WebSocket.send({
+    //     domainName,
+    //     stage,
+    //     connectionID,
+    //     message: connectionID,
+    // });
 
-    return Responses._200({ message: 'connected' });
+    // callback(null, Responses._200({ message: 'connected......' }))
+
+    return Responses._200({ message: 'connected......' });
 };

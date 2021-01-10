@@ -3,8 +3,8 @@ service: myserverlessproject2
 provider:
     name: aws
     runtime: nodejs12.x
-    profile: serverlessUser
-    region: eu-west-1
+    # profile: serverlessUser
+    # region: eu-west-1
     environment:
         tableName: ${self:custom.tableName}
     iamRoleStatements:
@@ -12,6 +12,8 @@ provider:
           Action:
               - dynamodb:*
           Resource: '*'
+        #   Resource:
+        #       - arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.tableName}
 
 custom:
     tableName: WebsocketUsers
@@ -37,10 +39,18 @@ functions:
         events:
             - websocket:
                   route: message
-
+    connectionStream:
+        handler: lambdas/websockets/dbMessage.handler
+        events:
+            - stream:
+                  type: dynamodb
+                  arn:
+                    Fn::GetAtt: [ WebsocketUserTable, StreamArn ]
+                  startingPosition: LATEST
+                  enabled: True
 resources:
     Resources:
-        WeboscketUserTable:
+        WebsocketUserTable:
             Type: AWS::DynamoDB::Table
             Properties:
                 TableName: ${self:custom.tableName}
@@ -51,3 +61,7 @@ resources:
                     - AttributeName: ID
                       KeyType: HASH
                 BillingMode: PAY_PER_REQUEST
+                StreamSpecification:
+                    StreamViewType: NEW_IMAGE
+# NEW_AND_OLD_IMAGES
+# 

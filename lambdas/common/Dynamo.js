@@ -14,7 +14,8 @@ const Dynamo = {
         const data = await documentClient.get(params).promise();
 
         if (!data || !data.Item) {
-            throw Error(`There was an error fetching the data for ID of ${ID} from ${TableName}`);
+            // throw Error(`There was an error fetching the data for ID of ${ID} from ${TableName}`);
+            return null;
         }
         console.log(data);
 
@@ -50,5 +51,13 @@ const Dynamo = {
 
         return documentClient.delete(params).promise();
     },
+
+    async scan(TableName) {
+        const params = {
+            TableName
+        }
+
+        return documentClient.scan(params).promise();
+    }
 };
 module.exports = Dynamo;

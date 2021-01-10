@@ -12,30 +12,43 @@ exports.handler = async event => {
     const body = JSON.parse(event.body);
 
     try {
-        const record = await Dynamo.get(connectionID, tableName);
-        const { messages, domainName, stage } = record;
+        // const record = await Dynamo.get(connectionID, tableName);
+        // const { messages, domainName, stage } = record;
 
-        messages.push(body.message);
+        // messages.push(body.message);
 
-        const data = {
-            ...record,
-            messages,
-        };
+        // const data = {
+        //     ...record,
+        //     messages,
+        // };
 
-        await Dynamo.write(data, tableName);
+        // await Dynamo.write(data, tableName);
+
+        // Find the other Connection ID
+        const result = await Dynamo.scan(tableName);
+        console.log('scan', result);
+
+        // find the other item
+        const filteredResult = result.Items.filter((items) => items.ID !== connectionID)[0];
+        const { ID: otherConnectionId, domainName, stage } = filteredResult
+        const { data } = body;
 
         await WebSocket.send({
             domainName,
             stage,
-            connectionID,
-            message: 'This is a reply to your message',
+            connectionID: otherConnectionId,
+            message: JSON.stringify({
+                statusCode: 200,
+                data
+            }),
         });
-        console.log('sent message');
+
+        // {"message": "dsdsd", "action": "message"}
+        // {"data": "{number: 6}", "action": "message"}
 
         return Responses._200({ message: 'got a message' });
     } catch (error) {
+        console.log('message', error);
         return Responses._400({ message: 'message could not be received' });
     }
-
-    return Responses._200({ message: 'got a message' });
 };
